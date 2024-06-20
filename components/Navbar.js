@@ -1,6 +1,5 @@
-// components/Navbar.js
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from 'next/link'; // Import Link from next/link
 import { useRouter } from 'next/router';
 
 const Navbar = () => {
@@ -79,7 +78,7 @@ const Navbar = () => {
 
           {/* Right side logout button */}
           <button
-          className="block rounded-sm bg-rose-400 px-6 py-3 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring"
+            className="block rounded-sm bg-rose-400 px-6 py-3 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring"
             onClick={handleLogout}
           >
             Logout

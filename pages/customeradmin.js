@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { Link } from 'react-router-dom';
 import PlusIcon from '@heroicons/react/solid/PlusIcon';
-
-export default function Customer() {
+import dynamic from 'next/dynamic'; // Import dynamic from next/dynamic
+const Customer = () => {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -23,8 +23,15 @@ export default function Customer() {
   });
 
   useEffect(() => {
-    fetchCustomers();
-  }, [page, searchTerm]);
+    // Check if in browser environment before fetching
+    if (typeof window !== 'undefined') {
+      fetchCustomers();
+    }
+     // Fetch immediately on client-side navigation
+    if (!showAddModal && !showEditModal && !showDeleteModal) {
+      fetchCustomers();
+    }
+  }, [page, searchTerm]);;
 
   const fetchCustomers = async () => {
     try {
@@ -380,4 +387,6 @@ export default function Customer() {
       </div>
     </Layout>
   );
-}
+};
+// Export the component using dynamic import with no SSR
+export default dynamic(() => Promise.resolve(Customer), { ssr: false });

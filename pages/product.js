@@ -3,7 +3,8 @@ import Layout from '../components/Layout';
 import { Link } from 'react-router-dom';
 import PlusIcon from '@heroicons/react/solid/PlusIcon';
 import mime from "mime";
-export default function Product() {
+import dynamic from 'next/dynamic'; // Import dynamic from next/dynamic
+const Product = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -315,4 +316,7 @@ export default function Product() {
       </div>
     </Layout>
   );
-}
+};
+
+// Export the component using dynamic import with no SSR
+export default dynamic(() => Promise.resolve(Product), { ssr: false });
