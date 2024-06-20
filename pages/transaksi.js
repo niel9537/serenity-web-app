@@ -1,29 +1,38 @@
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Layout from '../components/Layout';
 import { useRouter } from 'next/router';
 
+// Conditionally disable SSR for this component
 const Transaksi = () => {
   const [transactions, setTransactions] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await fetch(`/api/income?page=${page}&pageSize=${pageSize}&searchTerm=${searchTerm}`);
-        const data = await response.json();
-        setTransactions(data.transactions);
-        setTotalCount(data.totalCount);
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-      }
-    };
+    setIsClient(true);
+  }, []);
 
-    fetchTransactions();
-  }, [page, pageSize, searchTerm]);
+  useEffect(() => {
+    if (isClient) {
+      const fetchTransactions = async () => {
+        try {
+          const response = await fetch(`/api/income?page=${page}&pageSize=${pageSize}&searchTerm=${searchTerm}`);
+          const data = await response.json();
+          setTransactions(data.transactions);
+          setTotalCount(data.totalCount);
+        } catch (error) {
+          console.error('Error fetching transactions:', error);
+        }
+      };
+
+      fetchTransactions();
+    }
+  }, [page, pageSize, searchTerm, isClient]);
 
   const handlePrevPage = () => {
     setPage((prevPage) => prevPage - 1);
@@ -52,7 +61,7 @@ const Transaksi = () => {
         <td colSpan="3" className="py-2 px-4 text-right">Total</td>
         <td className="py-2 px-4">{totalQuantity}</td>
         <td className="py-2 px-4"></td>
-        <td className="py-2 px-4">Rp .{totalPurchase.toFixed(2)}</td>
+        <td className="py-2 px-4">Rp. {totalPurchase.toFixed(2)}</td>
         <td colSpan="2" className="py-2 px-4"></td>
       </tr>
     );
@@ -60,23 +69,21 @@ const Transaksi = () => {
 
   // Function to render transactions
   const renderTransactions = () => {
-  return transactions.map((transaction) => (
-    <tr key={transaction.id}>
-      <td className="py-2 px-4">{transaction.id}</td>
-      <td className="py-2 px-4">{transaction.customerName}</td>
-      <td className="py-2 px-4">{transaction.productName}</td>
-      <td className="py-2 px-4">{transaction.quantity}</td>
-      <td className="py-2 px-4">Rp. {transaction.price.toFixed(2)}</td>
-      <td className="py-2 px-4">Rp. {transaction.totalPrice.toFixed(2)}</td>
-      <td className="py-2 px-4">{new Date(transaction.transactionDate).toLocaleDateString()}</td>
-      <td className={`py-2 px-4 ${transaction.status === 'paid' ? 'bg-green-200' : 'bg-yellow-200'}`}>
-        {transaction.status === 'paid' ? 'Telah Bayar' : 'Menunggu Pembayaran'}
-      </td>
-    </tr>
+    return transactions.map((transaction) => (
+      <tr key={transaction.id}>
+        <td className="py-2 px-4">{transaction.id}</td>
+        <td className="py-2 px-4">{transaction.customerName}</td>
+        <td className="py-2 px-4">{transaction.productName}</td>
+        <td className="py-2 px-4">{transaction.quantity}</td>
+        <td className="py-2 px-4">Rp. {transaction.price.toFixed(2)}</td>
+        <td className="py-2 px-4">Rp. {transaction.totalPrice.toFixed(2)}</td>
+        <td className="py-2 px-4">{new Date(transaction.transactionDate).toLocaleDateString()}</td>
+        <td className={`py-2 px-4 ${transaction.status === 'paid' ? 'bg-green-200' : 'bg-yellow-200'}`}>
+          {transaction.status === 'paid' ? 'Telah Bayar' : 'Menunggu Pembayaran'}
+        </td>
+      </tr>
     ));
-    };
-
-
+  };
 
   return (
     <Layout>
@@ -125,7 +132,7 @@ const Transaksi = () => {
               {transactions.length > 0 ? (
                 <>
                   {renderTransactions()}
-   
+                  {renderSubtotalRow()}
                 </>
               ) : (
                 <tr>
@@ -161,4 +168,5 @@ const Transaksi = () => {
   );
 };
 
-export default Transaksi;
+// Export the component using dynamic import with no SSR
+export default dynamic(() => Promise.resolve(Transaksi), { ssr: false });
