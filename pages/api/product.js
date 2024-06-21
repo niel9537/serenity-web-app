@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../../lib/prisma'; // Adjust the import according to your project structure
+import prisma from '../../lib/prisma'; // Sesuaikan dengan struktur proyek Anda
 
 export default async function handler(req, res) {
   const { method } = req;
 
   if (method === 'GET') {
-    // Handle GET request to fetch products with search and pagination
+    // Menghandle permintaan GET untuk mengambil produk dengan pencarian dan penyebaran halaman
     const { searchTerm, page, pageSize } = req.query;
 
     try {
@@ -34,74 +34,60 @@ export default async function handler(req, res) {
       res.status(200).json({ products, totalCount });
     } catch (error) {
       console.error('Error fetching products:', error);
-      res.status(500).json({ error: 'Failed to fetch products' });
+      res.status(500).json({ error: 'Gagal mengambil produk' });
     }
   } else if (method === 'POST') {
-    // Handle POST request to create a new product
-    const { name, type, brand, price } = req.body;
+    // Menghandle permintaan POST untuk membuat produk baru
+    const { name, type, brand, price, stock, expiredDate, imageUrl } = req.body;
+    const priceFloat = parseFloat(price);
+    const stockFloat = parseFloat(stock);
+
     try {
       const newProduct = await prisma.product.create({
         data: {
           name,
           type,
           brand,
-          price,
+          price: priceFloat,
+          stock: stockFloat,
+          expiredDate,
+          imageUrl,
         },
       });
-      res.status(201).json({ message: 'Product created successfully', product: newProduct });
+      res.status(201).json({ message: 'Produk berhasil dibuat', product: newProduct });
     } catch (error) {
       console.error('Error creating product:', error);
-      res.status(500).json({ error: 'Failed to create product' });
+      res.status(500).json({ error: 'Gagal membuat produk' });
     }
   } else if (method === 'PUT') {
-    // Handle PUT request to update a product
-    const { productId, name, type, brand, price } = req.body;
+    // Menghandle permintaan PUT untuk memperbarui produk yang ada
+    const { id, name, type, brand, price, stock, expiredDate, imageUrl } = req.body;
+    const priceFloat = parseFloat(price);
+    const stockFloat = parseFloat(stock);
+    console.log(id)
     try {
-      const existingProduct = await prisma.product.findUnique({
-        where: { id: productId },
-      });
-
-      if (!existingProduct) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-
       const updatedProduct = await prisma.product.update({
-        where: { id: productId },
-        data: {
-          name,
-          type,
-          brand,
-          price,
-        },
+        where: { id: parseInt(id, 10) },
+        data: { name, type, brand, price: priceFloat, stock: stockFloat, expiredDate, imageUrl },
       });
 
-      res.status(200).json({ message: 'Product updated successfully', product: updatedProduct });
+      res.status(200).json({ message: 'Produk berhasil diperbarui', product: updatedProduct });
     } catch (error) {
       console.error('Error updating product:', error);
-      res.status(500).json({ error: 'Failed to update product' });
+      res.status(500).json({ error: 'Gagal memperbarui produk' });
     }
   } else if (method === 'DELETE') {
-    // Handle DELETE request to delete a product
-    const { productId } = req.query;
+    // Menghandle permintaan DELETE untuk menghapus produk
+    const productId = req.query.id;
+
     try {
-      const existingProduct = await prisma.product.findUnique({
-        where: { id: parseInt(productId, 10) },
-      });
-
-      if (!existingProduct) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-
-      await prisma.product.delete({
-        where: { id: parseInt(productId, 10) },
-      });
-
-      res.status(200).json({ message: 'Product deleted successfully' });
+      await prisma.product.delete({ where: { id: parseInt(productId, 10) } });
+      res.status(200).json({ message: 'Produk berhasil dihapus' });
     } catch (error) {
       console.error('Error deleting product:', error);
-      res.status(500).json({ error: 'Failed to delete product' });
+      res.status(500).json({ error: 'Gagal menghapus produk' });
     }
   } else {
-    res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Metode tidak diizinkan' });
   }
 }

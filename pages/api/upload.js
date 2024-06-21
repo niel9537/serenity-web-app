@@ -42,42 +42,35 @@ export default async function handler(req, res) {
       });
 
       // Ensure that 'image' file exists in formData.files
-      const file = formData.files?.image;
-      
-      if (!file) {
-        return res.status(400).json({ error: 'No files received or "image" field is missing.' });
+    const directoryPath = path.join(process.cwd(), 'public/uploads'); // Path to the uploads directory
+
+    try {
+      // Read all files in the directory
+      const files = await fs.promises.readdir(directoryPath);
+
+      if (!files || files.length === 0) {
+        return res.status(404).json({ error: 'No files found in the directory' });
       }
 
-      // Generate unique filename based on original filename or use default name
-      const filename = file.originalFilename ? file.originalFilename.replace(/\s+/g, '_') : 'file_tidak_bernama';
-      const newFilename = generateUniqueFilename(filename); // Generate unique filename
+      // Sort files by modified time in descending order to get the latest file
+      const sortedFiles = files.sort((a, b) => {
+        const statA = fs.statSync(path.join(directoryPath, a));
+        const statB = fs.statSync(path.join(directoryPath, b));
+        return statB.mtime.getTime() - statA.mtime.getTime();
+      });
 
-      const newPath = path.join(form.uploadDir, newFilename); // Ensure form.uploadDir is correctly set
+      // Get the latest file name
+      const latestFileName = sortedFiles[0];
+
+      // Return the latest file name in JSON response
+     
+      const imageUrl = `/uploads/${latestFileName}`;
+      return res.status(200).json({ message: 'Berhasil', imageUrl:imageUrl });
+    } catch (error) {
+      console.error('Error reading directory:', error);
+      return res.status(500).json({ error: 'Failed to read directory', message: error.message });
+    }
       
-      // Log the paths for debugging
-      console.log('New Path:', newPath);
-
-      try {
-        // Check if newFilename is defined and a string
-        if (typeof newFilename !== 'string') {
-          throw new Error('Generated filename is not valid');
-        }
-
-        // Check if file.filepath is defined and valid
-        if (!file.filepath || typeof file.filepath !== 'string') {
-          throw new Error('File path is undefined or not a string');
-        }
-
-        // Move file to new path
-        fs.renameSync(file.filepath, newPath);
-
-        // Return a JSON response with success message and status code 200, including imageUrl
-        const imageUrl = `/uploads/${newFilename}`;
-        return res.status(200).json({ message: 'Berhasil', imageUrl });
-      } catch (error) {
-        console.error('Kesalahan saat memindahkan file:', error);
-        return res.status(500).json({ message: 'Gagal memindahkan file', error: error.message });
-      }
     } catch (error) {
       console.error('Kesalahan saat memproses form:', error);
       return res.status(500).json({ message: 'Gagal memproses data form', error: error.message });
@@ -87,3 +80,4 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Metode tidak diizinkan' });
   }
 }
+

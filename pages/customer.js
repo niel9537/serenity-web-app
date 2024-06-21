@@ -9,12 +9,14 @@ const Customer = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-
+const BASE_URL = "http://localhost:3000";
   const [storedId, setStoredId] = useState(null);
   const [page, setPage] = useState(1); // Current page of products
   const [pageSize, setPageSize] = useState(10); // Number of products per page
   const [totalCount, setTotalCount] = useState(0); // Total number of products
  const [isSuccessVisible, setIsSuccessVisible] = useState(false);
+ const [isLoading, setIsLoading] = useState(true); // Add this line
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const id = localStorage.getItem('id');
@@ -29,12 +31,15 @@ const Customer = () => {
 
       const fetchProducts = async () => {
       try {
+         setIsLoading(true); // Add this line
         const response = await fetch(`/api/product?page=${page}&pageSize=${pageSize}`);
         const data = await response.json();
         setProducts(data.products);
         setTotalCount(data.totalCount);
       } catch (error) {
         console.error('Error fetching products:', error);
+      } finally {
+        setIsLoading(false); // Add this line
       }
     };
 
@@ -174,31 +179,45 @@ const Customer = () => {
         </div>
       </div>
 
-        <section className="bg-white py-16">
-        <div className="max-w-7xl container mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {products.map((product) => (
+       <section className="bg-white py-16">
+      <div className="max-w-7xl container mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {isLoading ? (
+            // Render skeleton loaders when loading
+            Array.from({ length: pageSize }).map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <div className="h-64 bg-gray-200"></div>
+                <div className="p-4">
+                  <div className="h-4 bg-gray-200 mb-4"></div>
+                  <div className="h-4 bg-gray-200 mb-2"></div>
+                  <div className="h-4 bg-gray-200"></div>
+                </div>
+              </div>
+            ))
+          ) : (
+            products.map((product) => (
               <ProductCard key={product.id} product={product} onTambahClick={handleTambahClick} />
-            ))}
-          </div>
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={handlePrevPage}
-              disabled={page === 1}
-              className="mr-4 px-4 py-2 bg-rose-500 text-white rounded-md"
-            >
-              Previous
-            </button>
-            <button
-              onClick={handleNextPage}
-              disabled={page * pageSize >= totalCount}
-              className="px-4 py-2 bg-rose-500 text-white rounded-md"
-            >
-              Next
-            </button>
-          </div>
+            ))
+          )}
         </div>
-      </section>
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handlePrevPage}
+            disabled={page === 1}
+            className="mr-4 px-4 py-2 bg-rose-500 text-white rounded-md"
+          >
+            Previous
+          </button>
+          <button
+            onClick={handleNextPage}
+            disabled={page * pageSize >= totalCount}
+            className="px-4 py-2 bg-rose-500 text-white rounded-md"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </section>
 
       {isPopupVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
@@ -234,6 +253,7 @@ const Customer = () => {
 };
 
 const ProductCard = ({ product, onTambahClick }) => (
+
   <a href="#" className="group relative block overflow-hidden">
     <button
       className="absolute end-4 top-4 z-10 rounded-full bg-white p-1.5 text-gray-900 transition hover:text-gray-900/75"
@@ -255,7 +275,7 @@ const ProductCard = ({ product, onTambahClick }) => (
       </svg>
     </button>
     <img
-      src="https://atlas-content-cdn.pixelsquid.com/stock-images/lipstick-n1QlzDF-600.jpg"
+      src={product.imageUrl ? `/public/upload/${product.imageUrl}` : "https://atlas-content-cdn.pixelsquid.com/stock-images/lipstick-n1QlzDF-600.jpg"}
       alt=""
       className="h-64 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-72"
     />

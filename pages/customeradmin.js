@@ -202,7 +202,7 @@ const Customer = () => {
             <span className="absolute -right-full transition-all group-hover:right-4">
               <PlusIcon className="w-5 h-5" />
             </span>
-            <span className="text-sm rounded-sm font-medium transition-all group-hover:mr-4">Add</span>
+            <span className="text-sm rounded-sm font-medium transition-all group-hover:mr-4">Tambah</span>
           </button>
         </div>
 
@@ -244,17 +244,17 @@ const Customer = () => {
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
           >
-            Previous
+            Sebelumnya
           </button>
           <span className="text-sm">
-            Page {page} of {Math.ceil(totalCount / pageSize)}
+            Halaman {page} dari {Math.ceil(totalCount / pageSize)}
           </span>
           <button
             className={`px-4 py-2 rounded ${page >= Math.ceil(totalCount / pageSize) ? 'bg-gray-300 cursor-not-allowed' : 'bg-rose-400 text-white'}`}
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= Math.ceil(totalCount / pageSize)}
           >
-            Next
+            Selanjutnya
           </button>
         </div>
 
